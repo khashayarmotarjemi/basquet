@@ -2,7 +2,7 @@ buildscript {
     repositories {
         jcenter()
     }
-    
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -16,8 +16,8 @@ version '0.0.1'
 mainClassName = "io.ktor.server.netty.EngineMain"
 
 sourceSets {
-    main.kotlin.srcDirs = main.java.srcDirs = ['src']
-    test.kotlin.srcDirs = test.java.srcDirs = ['test']
+    main.kotlin.srcDirs = main.java.srcDirs = ['src/main']
+    test.kotlin.srcDirs = test.java.srcDirs = ['src/test']
     main.resources.srcDirs = ['resources']
     test.resources.srcDirs = ['testresources']
 }
@@ -27,9 +27,16 @@ repositories {
     jcenter()
 }
 
+test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
     implementation "ch.qos.logback:logback-classic:$logback_version"
+    implementation 'org.junit.jupiter:junit-jupiter:5.4.2'
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
+    implementation "io.mockk:mockk:1.10.2"
+
 }
