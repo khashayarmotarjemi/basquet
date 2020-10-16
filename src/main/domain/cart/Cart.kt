@@ -7,9 +7,12 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisException
 
 class Cart(private val userId: Int) {
-    //    private val items: ArrayList<Product> = ArrayList()
     private val jedis: Jedis = Jedis()
     private val klx: Klaxon = Klaxon()
+
+    private fun updateData(items: List<CartItem>) {
+        jedis.hset("cart", userId.toString(), klx.toJsonString(items))
+    }
 
     fun getCart(): ArrayList<CartItem> {
         val productsList = jedis.hget("cart", userId.toString())
@@ -24,9 +27,6 @@ class Cart(private val userId: Int) {
     }
 
     fun addItem(product: Product) {
-/*
-        val productJson = klx.toJsonString(product)
-*/
         try {
             if (jedis.hexists("cart", userId.toString())) {
                 val oldItems = getCart()
@@ -38,15 +38,14 @@ class Cart(private val userId: Int) {
                         }
                         cartItem
                     }
-                    jedis.hset("cart", userId.toString(), klx.toJsonString(newItems))
+                    updateData(newItems)
 
                 } else {
                     oldItems.add(CartItem(product, 1))
-                    jedis.hset("cart", userId.toString(), klx.toJsonString(oldItems))
+                    updateData(oldItems)
                 }
             } else {
-                val itemsJson = klx.toJsonString(arrayListOf(CartItem(product, 1)))
-                jedis.hset("cart", userId.toString(), itemsJson)
+                updateData(arrayListOf(CartItem(product, 1)))
             }
         } catch (je: JedisException) {
             print(je)
@@ -55,18 +54,39 @@ class Cart(private val userId: Int) {
     }
 
     fun removeItem(id: Int) {
-//        items.removeIf { product -> product.id == id }
+        val items = getCart()
+        if (items.map { item -> item.product.id }.contains(id)) {
+            items.removeIf { item -> item.product.id == id }
+            updateData(items)
+        } else {
+            print("Item to delete with id $id doesn't exist")
+        }
+    }
 
+    fun decrementOne(id: Int) {
+        val items = getCart()
+        if (items.map { item -> item.product.id }.contains(id)) {
+            if (items.find { item -> item.product.id == id }?.quantity == 1) {
+                items.removeIf { item -> item.product.id == id }
+                updateData(items)
+            } else {
+                val newItems: List<CartItem> = items.map { cartItem ->
+                    if (cartItem.product.id == id) {
+                        cartItem.decrementQuantity()
+                    }
+                    cartItem
+                }
+                updateData(newItems)
+            }
+        } else {
+            print("Item to delete with id $id doesn't exist")
+        }
     }
 
     fun total(): Price {
-//        return items.fold(initial = Price(0), operation = { prev, product -> prev.plus(product.price) })
-        return Price(1, "")
-    }
-
-    fun count(): Int {
-        return 0
-//        return items.count()
+        return getCart().fold(
+            initial = Price(0, "$"),
+            operation = { prev, item -> prev.plus(item.product.price.amount * item.quantity) })
     }
 }
 
@@ -85,5 +105,9 @@ class CartLoadingFailed : CartData() {
 data class CartItem(val product: Product, var quantity: Int) {
     fun incrementQuantity() {
         quantity++
+    }
+
+    fun decrementQuantity() {
+        quantity--
     }
 }
