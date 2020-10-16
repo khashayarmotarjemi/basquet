@@ -28,10 +28,5 @@ class CartTests {
     fun calculatesTheTotalCorrectly() {
         assertEquals(300, cart.total().amount)
     }
-
-    @Test
-    fun removesAnItemCorrectly() {
-        cart.removeItem(p1.id)
-    }
 }
 

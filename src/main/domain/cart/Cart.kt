@@ -2,6 +2,7 @@ package io.khashayar.domain.cart
 
 import io.khashayar.domain.Price
 import io.khashayar.domain.Product
+import io.reactivex.rxjava3.core.Observable
 
 class Cart {
     private val items: ArrayList<Product> = ArrayList()
