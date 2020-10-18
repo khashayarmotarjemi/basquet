@@ -16,8 +16,8 @@ apply plugin: 'application'
 
 group 'io.khashayar'
 version '0.0.1'
-//mainClassName = "io.khashayar.ServerKt"
-mainClassName = "io.ktor.server.netty.EngineMain"
+mainClassName = "io.khashayar.ServerKt"
+//mainClassName = "io.ktor.server.netty.EngineMain"
 
 
 sourceSets {
