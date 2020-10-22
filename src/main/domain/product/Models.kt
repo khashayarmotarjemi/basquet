@@ -1,14 +1,21 @@
 package io.khashayar.domain.product
 
-import com.beust.klaxon.Klaxon
-
-class Product(val id: Int, val name: String, val price: Price) {
-    fun toJson(): String {
-        return Klaxon().toJsonString(this)
-    }
+class Product(
+    val id: Long,
+    val name: String,
+    val price: Price,
+    val imageId: String = "",
+    val description: String = ""
+) {
 
     override fun equals(other: Any?): Boolean {
-        return other is Product && other.id == id
+        return other is Product && this.hashCode() == other.hashCode()
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        return result
     }
 }
 

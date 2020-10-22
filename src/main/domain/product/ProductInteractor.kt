@@ -1,52 +1,63 @@
-/*
 package io.khashayar.domain.product
 
-import io.khashayar.data.CartRedisRepository
-import io.khashayar.data.ProductsRepository
-import io.khashayar.domain.product.Price
-import io.khashayar.domain.product.Product
-
-class ProductInteractor(private val productsRepository: ProductsRepository) {
-
-//    init {
-//        val p1 = Product(1, "first product #1", Price(100, "$"))
-//        val p2 = Product(2, "first product #2", Price(200, "$"))
-//        cartRepository.add(userId, p1)
-//        cartRepository.add(userId, p2)
-//    }
+import com.beust.klaxon.Klaxon
+import com.beust.klaxon.KlaxonException
+import io.khashayar.data.ProductRepository
 
 
-    fun itemsJson(): String {
-        return cartRepository.getCartJson(userId)
+class ProductInteractor(private val productsRepository: ProductRepository) {
+    private val klx: Klaxon = Klaxon()
+
+
+    fun add(name: String, price: Int, description: String, imageId: String = "") {
+        val itemCount = productsRepository.itemCount()
+        val id = itemCount + 1
+        val product = Product(id, name, Price(price, "$"), description = description, imageId = imageId)
+        productsRepository.add(klx.toJsonString(product))
     }
 
-    fun addItem(product: Product) {
-        cartRepository.add(userId, product)
+    fun getAllJson(): String {
+        return productsRepository.getAll()
     }
 
-    fun deleteCart() {
-        cartRepository.deleteCart(userId)
+    fun getJsonById(productId: Long): String? {
+        val json = productsRepository.getById(productId)
+        return if (json == "") {
+            null
+        } else {
+            json
+        }
     }
 
-    fun deleteItem(productId: Int) {
-        cartRepository.removeItem(userId, productId)
+    fun getById(productId: Long): Product? {
+        val productJson = productsRepository.getById(productId)
+        if (productJson != "") {
+            try {
+                val product = klx.parse<Product>(productJson)
+                if (product != null) {
+                    return product
+                }
+            } catch (ke: KlaxonException) {
+                print(ke)
+                print(ke.stackTrace)
+            }
+        }
+        return null
     }
 
-    fun decrementQuantity(productId: Int) {
-        cartRepository.decrementOne(userId, productId)
+    fun getAll(): List<Product> {
+        return try {
+            klx.parseArray(getAllJson()) ?: ArrayList()
+        } catch (ke: KlaxonException) {
+            print(ke)
+            print(ke.stackTrace)
+            ArrayList()
+        }
     }
 
-    fun totalPrice(): Price {
-        return cartRepository.total(userId)
+    fun deleteAll() {
+        productsRepository.deleteAll()
     }
 }
 
-open class CartData
 
-class CartLoaded(private val items: List<CartItem>) : CartData() {
-
-}
-
-class CartLoadingFailed : CartData() {
-
-}*/

@@ -1,28 +1,18 @@
 package io.khashayar.data
 
-import redis.clients.jedis.Jedis
+interface ProductRepository {
 
-class ProductRedisRepository {
-    private val jedis: Jedis = Jedis()
+    fun getAll(start: Long = 0, end: Long = 100): String
 
-    private val key = "products"
+    fun itemCount(): Long
 
-    fun getAll(): String {
-        val start: Long = 0
-        val end: Long = 100
+    fun add(productJson: String): Long
 
-        return jedis.lrange(key, start, end).toString()
-    }
+    fun deleteAll()
 
-    fun add(productJson: String, productId: Long) {
-        jedis.lpush(key, productJson)
-    }
+    fun getById(productId: Long): String
 
-    fun getById(productId: Long): String {
-        return jedis.lindex(key, productId)
-    }
-
-    fun deleteAll() {
-        jedis.del(key)
+    fun addAll(products: List<String>) {
+        products.map { json -> add(json) }
     }
 }

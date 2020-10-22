@@ -7,6 +7,8 @@ import io.khashayar.domain.cart.CartItem
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisException
 
+// TODO: move json parsing and conversion to the interacto
+
 class CartRedisRepository() {
     private val jedis: Jedis = Jedis()
     private val klx: Klaxon = Klaxon()
@@ -18,8 +20,12 @@ class CartRedisRepository() {
     private fun getCartItems(userId: Int): ArrayList<CartItem> {
         return try {
             val productsList = getCartJson(userId)
-            val list: List<CartItem> = klx.parseArray(productsList)!!
-            ArrayList(list)
+            if (productsList != null) {
+                val list: List<CartItem> = klx.parseArray(productsList)!!
+                ArrayList(list)
+            } else {
+                ArrayList()
+            }
         } catch (e: Exception) {
             print(e)
             print(e.stackTrace)
@@ -31,11 +37,11 @@ class CartRedisRepository() {
         return jedis.hexists("cart", userId.toString())
     }
 
-    private fun hasItem(items: List<CartItem>, id: Int): Boolean {
+    private fun hasItem(items: List<CartItem>, id: Long): Boolean {
         return items.map { item -> item.product.id }.contains(id)
     }
 
-    private fun incrementItem(items: List<CartItem>, id: Int): List<CartItem> {
+    private fun incrementItem(items: List<CartItem>, id: Long): List<CartItem> {
         return items.map { cartItem ->
             if (cartItem.product.id == id) {
                 cartItem.incrementQuantity()
@@ -45,11 +51,12 @@ class CartRedisRepository() {
     }
 
 
-    fun getCartJson(userId: Int): String {
+    fun getCartJson(userId: Int): String? {
         return if (hasCart(userId)) {
-            jedis.hget("cart", userId.toString())
+            val cartData = jedis.hget("cart", userId.toString())
+            cartData
         } else {
-            "[]"
+            null
         }
     }
 
@@ -77,7 +84,7 @@ class CartRedisRepository() {
         jedis.hdel("cart", userId.toString())
     }
 
-    fun removeItem(userId: Int, productId: Int) {
+    fun removeItem(userId: Int, productId: Long) {
         val items = getCartItems(userId)
         if (hasItem(items, productId)) {
             items.removeIf { item -> item.product.id == productId }
@@ -87,7 +94,7 @@ class CartRedisRepository() {
         }
     }
 
-    fun decrementOne(userId: Int, productId: Int) {
+    fun decrementOne(userId: Int, productId: Long) {
         val items = getCartItems(userId)
         if (hasItem(items, productId)) {
             if (items.find { item -> item.product.id == productId }?.quantity == 1) {

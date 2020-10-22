@@ -20,6 +20,10 @@ mainClassName = "io.khashayar.ServerKt"
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
 
+sourceCompatibility = 1.8
+compileKotlin { kotlinOptions.jvmTarget = "1.8" }
+compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
+
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src/main']
     test.kotlin.srcDirs = test.java.srcDirs = ['src/test']
@@ -42,13 +46,14 @@ test {
     useJUnitPlatform()
 }
 
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
     implementation "ch.qos.logback:logback-classic:$logback_version"
     implementation 'org.junit.jupiter:junit-jupiter:5.4.2'
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
-    implementation "io.mockk:mockk:1.10.2"
+    testImplementation "io.mockk:mockk:1.10.2"
     implementation("io.reactivex.rxjava3:rxkotlin:3.0.1")
     implementation 'com.beust:klaxon:5.0.1'
     implementation group: 'redis.clients', name: 'jedis', version: '2.8.0'
