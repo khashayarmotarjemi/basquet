@@ -10,4 +10,16 @@ data class CartItem(val product: Product, var quantity: Int) {
     fun decrementQuantity() {
         quantity--
     }
+
+    override fun equals(other: Any?): Boolean {
+        return other is CartItem && this.hashCode() == other.hashCode()
+    }
+
+    override fun hashCode(): Int {
+        var result = product.hashCode()
+        result = 31 * result + quantity
+        return result
+    }
+
+
 }

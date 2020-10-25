@@ -1,57 +1,105 @@
 package io.khashayar.data
 
 import com.beust.klaxon.Klaxon
+import com.beust.klaxon.KlaxonException
 import io.khashayar.domain.product.Price
 import io.khashayar.domain.product.Product
 import io.khashayar.domain.cart.CartItem
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisException
 
-// TODO: move json parsing and conversion to the interacto
+// TODO: move json parsing and conversion to the interactor
 
-class CartRedisRepository() {
+class CartRedisRepository : CartRepository {
     private val jedis: Jedis = Jedis()
-    private val klx: Klaxon = Klaxon()
 
-    private fun updateData(items: List<CartItem>, userId: Int) {
-        jedis.hset("cart", userId.toString(), klx.toJsonString(items))
-    }
-
-    private fun getCartItems(userId: Int): ArrayList<CartItem> {
+    override fun hasCart(userId: Int): Boolean {
         return try {
-            val productsList = getCartJson(userId)
-            if (productsList != null) {
-                val list: List<CartItem> = klx.parseArray(productsList)!!
-                ArrayList(list)
-            } else {
-                ArrayList()
-            }
-        } catch (e: Exception) {
-            print(e)
-            print(e.stackTrace)
-            ArrayList()
+            jedis.exists(userId.toString())
+        } catch (ke: KlaxonException) {
+            print(ke)
+            print(ke.stackTrace)
+            false
         }
     }
 
-    private fun hasCart(userId: Int): Boolean {
-        return jedis.hexists("cart", userId.toString())
-    }
-
-    private fun hasItem(items: List<CartItem>, id: Long): Boolean {
-        return items.map { item -> item.product.id }.contains(id)
-    }
-
-    private fun incrementItem(items: List<CartItem>, id: Long): List<CartItem> {
-        return items.map { cartItem ->
-            if (cartItem.product.id == id) {
-                cartItem.incrementQuantity()
-            }
-            cartItem
+    override fun hasItem(userId: Int, productId: Long): Boolean {
+        return try {
+            jedis.hexists(userId.toString(), productId.toString())
+        } catch (ke: KlaxonException) {
+            print(ke)
+            print(ke.stackTrace)
+            false
         }
     }
 
 
-    fun getCartJson(userId: Int): String? {
+    override fun getItem(userId: Int, productId: Long): String? {
+        val itemJson: String
+        try {
+            itemJson = jedis.hget(userId.toString(), productId.toString())
+        } catch (ke: KlaxonException) {
+            print(ke)
+            print(ke.stackTrace)
+            return null
+        }
+        return itemJson
+    }
+
+    override fun getAll(userId: Int): String? {
+        return if (hasCart(userId)) {
+            val cartData = jedis.hgetAll(userId.toString())
+            return cartData.values.toString()
+        } else {
+            null
+        }
+    }
+
+    override fun addOrUpdate(userId: Int, productId: Long, cartItemJson: String): Boolean {
+        try {
+            jedis.hset(userId.toString(), productId.toString(), cartItemJson)
+        } catch (ke: KlaxonException) {
+            print(ke)
+            print(ke.stackTrace)
+            return false
+        }
+        return true
+    }
+
+    override fun deleteCart(userId: Int): Boolean {
+        if (hasCart(userId)) {
+            try {
+                jedis.del(userId.toString())
+            } catch (ke: KlaxonException) {
+                print(ke)
+                print(ke.stackTrace)
+                return false
+            }
+            return true
+        } else {
+            print("Database doesn't have a cart for user with id: $userId")
+            return false
+        }
+    }
+
+    override fun deleteItem(userId: Int, productId: Long): Boolean {
+        if (hasCart(userId)) {
+            try {
+                jedis.hdel(userId.toString(), productId.toString())
+            } catch (ke: KlaxonException) {
+                print(ke)
+                print(ke.stackTrace)
+                return false
+            }
+            return true
+        } else {
+            print("Database doesn't have a cart for user with id: $userId")
+            return false
+        }
+    }
+
+
+    /*fun getCartJson(userId: Int): String? {
         return if (hasCart(userId)) {
             val cartData = jedis.hget("cart", userId.toString())
             cartData
@@ -60,13 +108,13 @@ class CartRedisRepository() {
         }
     }
 
-    fun add(userId: Int, product: Product) {
+    fun add(userId: Int, productId: Long, productJson: String) {
         try {
             if (hasCart(userId)) {
                 val oldItems = getCartItems(userId)
 
-                if (hasItem(oldItems, product.id)) {
-                    updateData(incrementItem(oldItems, product.id), userId)
+                if (hasItem(userId, productId)) {
+                    updateData(incrementItem(oldItems, productId), userId)
                 } else {
                     oldItems.add(CartItem(product, 1))
                     updateData(oldItems, userId)
@@ -118,5 +166,5 @@ class CartRedisRepository() {
         return getCartItems(userId).fold(
             initial = Price(0, "$"),
             operation = { prev, item -> prev.plus(item.product.price.amount * item.quantity) })
-    }
+    }*/
 }
