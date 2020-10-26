@@ -51,6 +51,18 @@ class CartInteractor(
         }
     }
 
+    @Throws(KlaxonException::class)
+    private fun getDecrementedJson(initialJson: String): String {
+        val item = klx.parse<CartItem>(initialJson)
+
+        if (item == null) {
+            throw KlaxonException("could not parse json: $initialJson")
+        } else {
+            item.decrementQuantity()
+            return klx.toJsonString(item)
+        }
+    }
+
 
     fun addItem(productId: Long): Boolean {
         val itemJson = cartRepository.getItem(userId, productId)
@@ -84,8 +96,23 @@ class CartInteractor(
         cartRepository.deleteItem(userId, productId)
     }
 
-    fun decrementQuantity(productId: Long) {
-        getItem(productId)?.decrementQuantity()
+    fun decrementQuantity(productId: Long): Boolean {
+        val itemJson = cartRepository.getItem(userId, productId)
+
+        return if (itemJson != null) {
+            val item = klx.parse<CartItem>(itemJson)
+
+            if(item != null) {
+                item.decrementQuantity()
+                val decJson = klx.toJsonString(item)
+                cartRepository.addOrUpdate(userId,productId,decJson)
+            } else {
+                throw KlaxonException("could not parse json: $itemJson")
+            }
+        } else {
+            print("item doesn't exist in the cart")
+            false
+        }
     }
 
     fun totalPrice(): Price {

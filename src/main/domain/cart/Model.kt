@@ -20,6 +20,4 @@ data class CartItem(val product: Product, var quantity: Int) {
         result = 31 * result + quantity
         return result
     }
-
-
 }

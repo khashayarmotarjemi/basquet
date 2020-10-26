@@ -1,8 +1,5 @@
 package io.khashayar.data
 
-import io.khashayar.domain.cart.CartItem
-import io.khashayar.domain.product.Price
-import redis.clients.jedis.exceptions.JedisException
 
 interface CartRepository {
 

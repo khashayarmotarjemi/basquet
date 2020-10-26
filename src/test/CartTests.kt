@@ -2,46 +2,54 @@ package io.khashayar.test
 
 import com.beust.klaxon.Klaxon
 import io.khashayar.data.CartRedisRepository
-import io.khashayar.domain.product.Price
-import io.khashayar.domain.product.Product
 import io.khashayar.data.CartRepository
+import io.khashayar.domain.cart.CartInteractor
 import io.khashayar.domain.cart.CartItem
+import io.khashayar.domain.product.ProductInteractor
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import redis.clients.jedis.Jedis
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+
+
+class CartRepoMocks(private val cartRepository: CartRepository) {
+    private val helper = Helper()
+
+    fun getEmptyRepo(): CartRepository {
+        Jedis().flushAll()
+        return cartRepository
+    }
+
+    fun getPopulatedRepo(): CartRepository {
+        Jedis().flushAll()
+        cartRepository.addOrUpdate(helper.userIdWithCart, helper.p1.id, helper.c1json)
+        cartRepository.addOrUpdate(helper.userIdWithCart, helper.p2.id, helper.c2json)
+        cartRepository.addOrUpdate(helper.userIdWithCart, helper.p3.id, helper.c3json)
+
+        return cartRepository
+
+    }
+}
+
 
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class CartRepositoryTests {
     // init stuff
     private val klx = Klaxon()
-
-    private val userId = 999
-
-    private val p1 = Product(1, "first product #1", Price(100, "$"))
-    private val p2 = Product(2, "second product #2", Price(200, "$"))
-    private val p3 = Product(3, "third product #3", Price(300, "$"))
-    private val np4 = Product(4, "third product #4", Price(400, "$"))
-
-    private val c1 = CartItem(p1, 1)
-    private val c2 = CartItem(p2, 1)
-    private val c3 = CartItem(p3, 1)
-    private val nc4 = CartItem(np4, 1)
-
-    private val c1json = klx.toJsonString(c1)
-    private val c2json = klx.toJsonString(c2)
-    private val c3json = klx.toJsonString(c3)
-    private val nc4json = klx.toJsonString(nc4)
-
+    private val helper = Helper()
 
     companion object {
+        private val mocks = CartRepoMocks(CartRedisRepository())
+
         @JvmStatic
-        fun repositories() = listOf(
-            Arguments.of(CartRedisRepository()),
+        fun mocks() = listOf(
+            Arguments.of(mocks),
         )
     }
 
@@ -50,85 +58,128 @@ class CartRepositoryTests {
         return ArrayList(list)
     }
 
-    private fun initiateDB(cartRepository: CartRepository) {
-        Jedis().flushAll()
-        cartRepository.addOrUpdate(userId, p1.id, c1json)
-        cartRepository.addOrUpdate(userId, p2.id, c2json)
-        cartRepository.addOrUpdate(userId, p3.id, c3json)
-    }
-
     // tests
     @ParameterizedTest
-    @MethodSource("repositories")
-    fun addsItemsCorrectly(cartRepository: CartRepository) {
-        Jedis().flushAll()
+    @MethodSource("mocks")
+    fun addsAndGetsAllCorrectly(mocks: CartRepoMocks) {
+        val loaded: ArrayList<CartItem> =
+            getItemsFromJson(mocks.getPopulatedRepo().getAll(helper.userIdWithCart) ?: "")
 
-        assertEquals(true, cartRepository.addOrUpdate(userId, p1.id, c1json))
-        assertEquals(true, cartRepository.addOrUpdate(userId, p2.id, c2json))
-        assertEquals(true, cartRepository.addOrUpdate(userId, p3.id, c3json))
+        assertEquals(loaded.count(), 3)
 
-        assertEquals(true, cartRepository.hasItem(userId, p1.id))
-        assertEquals(true, cartRepository.hasItem(userId, p1.id))
-        assertEquals(true, cartRepository.hasItem(userId, p1.id))
-        assertEquals(false, cartRepository.hasItem(userId, np4.id))
+        assert(loaded.contains(helper.c1))
+        assert(loaded.contains(helper.c2))
+        assert(loaded.contains(helper.c3))
+        assert(!loaded.contains(helper.nc4))
     }
 
     @ParameterizedTest
-    @MethodSource("repositories")
-    fun getAllItemsCorrectly(cartRepository: CartRepository) {
-        initiateDB(cartRepository)
+    @MethodSource("mocks")
+    fun getsCartItemById(mocks: CartRepoMocks) {
+        val cartRepository = mocks.getPopulatedRepo()
 
-        val items = getItemsFromJson(cartRepository.getAll(userId)!!)
+        val cartItem2 = klx.parse<CartItem>(cartRepository.getItem(helper.userIdWithCart, helper.c2.product.id)!!)
+        assertEquals(cartItem2!!.product.id, helper.c2.product.id)
 
-        assert(items.contains(c1))
-        assert(items.contains(c2))
-        assert(items.contains(c3))
-        assert(!items.contains(nc4))
+        val cartItem3 = klx.parse<CartItem>(cartRepository.getItem(helper.userIdWithCart, helper.c3.product.id)!!)
+        assertEquals(cartItem3!!.product.id, helper.c3.product.id)
     }
 
     @ParameterizedTest
-    @MethodSource("repositories")
-    fun getsCartItemById(cartRepository: CartRepository) {
-        initiateDB(cartRepository)
+    @MethodSource("mocks")
+    fun deletesItemCorrectly(mocks: CartRepoMocks) {
 
-        val product2 = klx.parse<CartItem>(cartRepository.getItem(userId, p2.id)!!)
-        assertEquals(product2!!.product.id, p2.id)
+        val cartRepository = mocks.getPopulatedRepo()
 
-        val product3 = klx.parse<CartItem>(cartRepository.getItem(userId, p3.id)!!)
-        assertEquals(product3!!.product.id, p3.id)
+        cartRepository.deleteItem(helper.userIdWithCart, helper.c2.product.id)
+
+        assert(cartRepository.hasItem(helper.userIdWithCart, helper.p1.id))
+        assert(cartRepository.hasItem(helper.userIdWithCart, helper.p3.id))
+
+        assertFalse(cartRepository.hasItem(helper.userIdWithCart, helper.c2.product.id))
+        assertFalse(cartRepository.hasItem(helper.userIdWithCart, helper.nc4.product.id))
     }
 
     @ParameterizedTest
-    @MethodSource("repositories")
-    fun deletesItemCorrectly(cartRepository: CartRepository) {
-        Jedis().flushAll()
+    @MethodSource("mocks")
+    fun deletesAllCorrectly(mocks: CartRepoMocks) {
+//        Jedis().flushAll()
+        val cartRepository = mocks.getPopulatedRepo()
 
-        cartRepository.addOrUpdate(userId, p1.id, c1json)
-        cartRepository.addOrUpdate(userId, p2.id, c2json)
-        cartRepository.addOrUpdate(userId, p3.id, c3json)
-
-        cartRepository.deleteItem(userId, p2.id)
-
-        assert(cartRepository.hasItem(userId, p1.id))
-        assert(cartRepository.hasItem(userId, p3.id))
-
-        assert(!cartRepository.hasItem(userId, p2.id))
-
-//        assertEquals(true, cartRepository.getAll())
+        assertNotNull(cartRepository.getAll(helper.userIdWithCart))
+        cartRepository.deleteCart(helper.userIdWithCart)
+        assertEquals(null, cartRepository.getAll(helper.userIdWithCart))
     }
 
-    @ParameterizedTest
-    @MethodSource("repositories")
-    fun deletesAllCorrectly(cartRepository: CartRepository) {
-        Jedis().flushAll()
+}
 
-        cartRepository.addOrUpdate(userId, p1.id, c1json)
-        cartRepository.addOrUpdate(userId, p2.id, c2json)
-        cartRepository.addOrUpdate(userId, p3.id, c3json)
 
-        assertNotNull(cartRepository.getAll(userId))
-        cartRepository.deleteCart(userId)
-        assertEquals(null, cartRepository.getAll(userId))
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+class CartInteractorTests {
+    //    private val mocks = ProductInterMocks()
+    private val helper = Helper()
+
+    private fun getNewInteractor(): CartInteractor {
+        return CartInteractor(
+            helper.userIdWithCart,
+            helper.getMockCartRepo(),
+            helper.getPopulatedMockProductInteractor()
+        )
     }
 
+    @Test
+    fun addsAndGetsItemsCorrectly() {
+        val cartInteractor = getNewInteractor()
+
+        helper.testCartItems.map { item -> cartInteractor.addItem(item.product.id) }
+
+        assertEquals(3, cartInteractor.items().count())
+
+        cartInteractor.addItem(helper.p1.id)
+
+        assertEquals(3, cartInteractor.items().count())
+
+        assertEquals(2, cartInteractor.items().find { it.product.id == helper.p1.id }!!.quantity)
+        assertEquals(1, cartInteractor.items().find { it.product.id == helper.p2.id }!!.quantity)
+        assertEquals(1, cartInteractor.items().find { it.product.id == helper.p3.id }!!.quantity)
+
+        assertFalse(cartInteractor.items().contains(helper.nc4))
+
+    }
+
+    @Test
+    fun getsItemsJsonCorrectly() {
+        val cartInteractor = getNewInteractor()
+
+        helper.testCartItems.map { item -> cartInteractor.addItem(item.product.id) }
+
+        assertEquals(Klaxon().toJsonString(helper.testCartItems), cartInteractor.itemsJson())
+    }
+
+    @Test
+    fun deletesItemCorrectly() {
+        val cartInteractor = getNewInteractor()
+
+        helper.testCartItems.map { item -> cartInteractor.addItem(item.product.id) }
+
+        cartInteractor.deleteItem(helper.p2.id)
+
+        assert(cartInteractor.items().contains(helper.c1))
+        assert(cartInteractor.items().contains(helper.c3))
+        assertFalse(cartInteractor.items().contains(helper.c2))
+    }
+
+    @Test
+    fun decrementsQuantityCorrectly() {
+        val cartInteractor = getNewInteractor()
+
+        helper.testCartItems.map { item -> cartInteractor.addItem(item.product.id) }
+        cartInteractor.addItem(helper.p1.id)
+
+        assertEquals(2, cartInteractor.items().find { it.product.id == helper.p1.id }!!.quantity)
+
+        cartInteractor.decrementQuantity(helper.p1.id)
+
+        assertEquals(1, cartInteractor.items().find { it.product.id == helper.p1.id }!!.quantity)
+    }
 }
