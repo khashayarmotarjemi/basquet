@@ -5,6 +5,7 @@ import io.khashayar.data.CartRedisRepository
 import io.khashayar.data.CartRepository
 import io.khashayar.domain.cart.CartInteractor
 import io.khashayar.domain.cart.CartItem
+import io.khashayar.domain.product.Price
 import io.khashayar.domain.product.ProductInteractor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -181,5 +182,19 @@ class CartInteractorTests {
         cartInteractor.decrementQuantity(helper.p1.id)
 
         assertEquals(1, cartInteractor.items().find { it.product.id == helper.p1.id }!!.quantity)
+
+        cartInteractor.decrementQuantity(helper.p1.id)
+
+        assertEquals(2,cartInteractor.items().size)
+
+    }
+
+    @Test
+    fun getsTotalPriceCorrectly() {
+        val cartInteractor = getNewInteractor()
+
+        helper.testCartItems.map { item -> cartInteractor.addItem(item.product.id) }
+
+        assertEquals(600, cartInteractor.totalPrice().amount)
     }
 }

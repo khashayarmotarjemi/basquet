@@ -31,10 +31,6 @@ class CartInteractor(
         return itemsList ?: ArrayList()
     }
 
-    private fun getItem(productId: Long): CartItem? {
-        return items().find { it.product.id == productId }
-    }
-
 
     // for now this function parses the item then increments quantity
     // and converts it back to json string, it can be made more efficient
@@ -50,19 +46,6 @@ class CartInteractor(
             return klx.toJsonString(item)
         }
     }
-
-    @Throws(KlaxonException::class)
-    private fun getDecrementedJson(initialJson: String): String {
-        val item = klx.parse<CartItem>(initialJson)
-
-        if (item == null) {
-            throw KlaxonException("could not parse json: $initialJson")
-        } else {
-            item.decrementQuantity()
-            return klx.toJsonString(item)
-        }
-    }
-
 
     fun addItem(productId: Long): Boolean {
         val itemJson = cartRepository.getItem(userId, productId)
@@ -102,10 +85,14 @@ class CartInteractor(
         return if (itemJson != null) {
             val item = klx.parse<CartItem>(itemJson)
 
-            if(item != null) {
-                item.decrementQuantity()
-                val decJson = klx.toJsonString(item)
-                cartRepository.addOrUpdate(userId,productId,decJson)
+            if (item != null) {
+                return if (item.quantity > 1) {
+                    item.decrementQuantity()
+                    val decJson = klx.toJsonString(item)
+                    cartRepository.addOrUpdate(userId, productId, decJson)
+                } else {
+                    cartRepository.deleteItem(userId, productId)
+                }
             } else {
                 throw KlaxonException("could not parse json: $itemJson")
             }

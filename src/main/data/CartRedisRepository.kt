@@ -37,7 +37,11 @@ class CartRedisRepository : CartRepository {
     override fun getItem(userId: Int, productId: Long): String? {
         val itemJson: String
         try {
-            itemJson = jedis.hget(userId.toString(), productId.toString())
+            if(hasItem(userId,productId)) {
+                itemJson = jedis.hget(userId.toString(), productId.toString())
+            } else {
+                return null
+            }
         } catch (ke: KlaxonException) {
             print(ke)
             print(ke.stackTrace)

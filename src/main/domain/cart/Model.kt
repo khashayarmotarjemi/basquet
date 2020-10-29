@@ -8,7 +8,11 @@ data class CartItem(val product: Product, var quantity: Int) {
     }
 
     fun decrementQuantity() {
-        quantity--
+        if (quantity > 1) {
+            quantity--
+        } else {
+            print("quantity is one, instead of decrementing item should be deleted")
+        }
     }
 
     override fun equals(other: Any?): Boolean {
