@@ -2,6 +2,7 @@ package io.khashayar.test
 
 import com.beust.klaxon.Klaxon
 import io.khashayar.data.CartRepository
+import io.khashayar.data.ProductMongoRepository
 import io.khashayar.data.ProductRepository
 import io.khashayar.domain.product.Price
 import io.khashayar.domain.product.AlbumProduct
@@ -93,7 +94,7 @@ class Helper {
 
             every { mockProductRepo.getById(product.id) } returns productJson
 
-            every { mockProductRepo.add(productJson) } answers {
+            every { mockProductRepo.add(productJson, product.id) } answers {
                 productDB.add(product)
                 product.id
             }
@@ -194,9 +195,9 @@ class Helper {
     fun getPopulatedMockProductRepo(): ProductRepository {
         Jedis().flushAll()
 
-        mockProductRepo.add(p1json)
-        mockProductRepo.add(p2json)
-        mockProductRepo.add(p3json)
+        mockProductRepo.add(p1json, p1.id)
+        mockProductRepo.add(p2json, p2.id)
+        mockProductRepo.add(p3json, p3.id)
         return mockProductRepo
     }
 
@@ -218,16 +219,16 @@ class ProductRepoMocks(private val productRepo: ProductRepository) {
     private val helper = Helper()
 
     fun getEmptyRepo(): ProductRepository {
-        Jedis().flushAll()
+        productRepo.testDeleteEverything()
         return productRepo
     }
 
     fun getPopulatedRepo(): ProductRepository {
-        Jedis().flushAll()
+        productRepo.testDeleteEverything()
 
-        productRepo.add(helper.p1json)
-        productRepo.add(helper.p2json)
-        productRepo.add(helper.p3json)
+        productRepo.add(helper.p1json, helper.p1.id)
+        productRepo.add(helper.p2json, helper.p2.id)
+        productRepo.add(helper.p3json, helper.p3.id)
         return productRepo
     }
 }
@@ -248,11 +249,13 @@ class ProductRepositoryTests {
     private val helper = Helper()
 
     companion object {
-        private val mocks = ProductRepoMocks(ProductsRedisRepository())
+        private val redis = ProductRepoMocks(ProductsRedisRepository())
+        private val mongo = ProductRepoMocks(ProductMongoRepository())
 
         @JvmStatic
         fun mocks() = listOf(
-            Arguments.of(mocks),
+            Arguments.of(redis),
+            Arguments.of(mongo),
         )
     }
 
@@ -290,7 +293,6 @@ class ProductRepositoryTests {
     @ParameterizedTest
     @MethodSource("mocks")
     fun deletesAllCorrectly(mocks: ProductRepoMocks) {
-//        initiate(productRepo)
         val repo = mocks.getPopulatedRepo()
 
         repo.deleteAll()

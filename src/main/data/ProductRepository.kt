@@ -6,13 +6,11 @@ interface ProductRepository {
 
     fun itemCount(): Long
 
-    fun add(productJson: String): Long
+    fun add(productJson: String,productId: Long): Long
 
     fun deleteAll()
 
     fun getById(productId: Long): String
 
-    fun addAll(products: List<String>) {
-        products.map { json -> add(json) }
-    }
+    fun testDeleteEverything()
 }

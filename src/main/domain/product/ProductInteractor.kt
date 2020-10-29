@@ -21,7 +21,7 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
             artistName = artist,
             releaseDate = year
         )
-        productsRepository.add(klx.toJsonString(product))
+        productsRepository.add(klx.toJsonString(product),product.id)
     }
 
     fun getAllJson(): String {

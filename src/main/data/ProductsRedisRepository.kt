@@ -17,7 +17,7 @@ class ProductsRedisRepository : ProductRepository {
 
     // returns the size of the
     override
-    fun add(productJson: String): Long {
+    fun add(productJson: String, productId: Long): Long {
         return jedis.rpush(key, productJson)
     }
 
@@ -35,6 +35,10 @@ class ProductsRedisRepository : ProductRepository {
             print(je.stackTrace)
             ""
         }
+    }
+
+    override fun testDeleteEverything() {
+        jedis.flushAll()
     }
 
     override

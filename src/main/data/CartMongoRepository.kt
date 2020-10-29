@@ -17,7 +17,7 @@ class CartMongoRepository : CartRepository {
         return database.getCollection(userId.toString())
     }
 
-    private fun getDocument(itemJson: String, productId: Long) =
+    private fun parsesDocument(itemJson: String, productId: Long) =
         Document(
             mapOf<String?, Any>(
                 Pair("product_id", productId),
@@ -46,7 +46,7 @@ class CartMongoRepository : CartRepository {
 
     override fun addOrUpdate(userId: Int, productId: Long, cartItemJson: String): Boolean {
         getCollection(userId).replaceOne(
-            Filters.eq("product_id", productId), getDocument(cartItemJson, productId),
+            Filters.eq("product_id", productId), parsesDocument(cartItemJson, productId),
             ReplaceOptions().upsert(true)
         )
         return true
