@@ -86,8 +86,10 @@ class SpotifyBloc(private val productInteractor: ProductInteractor) {
                         albums.map { album ->
                             productInteractor.add(
                                 album.name,
+                                album.artists[0].name,
+                                album.releaseDate,
                                 20,
-                                album.artists.joinToString { it.toString() },
+                                album.genres.joinToString { it },
                                 imageId = album.images[0].url
                             )
                         }
@@ -177,107 +179,107 @@ class SpotifyBloc(private val productInteractor: ProductInteractor) {
     }
 }
 
-class ExtractionInteractor(private val productInteractor: ProductInteractor) {
-
-
-    fun populateDB() {
-        Jedis().flushAll()
-
-        productInteractor.add(
-            "Tweez",
-            12,
-            imageId = "BRwqzx3GY",
-            description = "Includes FREE MP3 version of this album. "
-        )
-        productInteractor.add(
-            "London Calling",
-            17,
-            imageId = "qd9oT7EGe",
-            description = "Best Sellers Rank: 341 in CDs & Vinyl (See Top 100 in CDs & Vinyl)"
-        )
-        productInteractor.add(
-            "The Man Machine",
-            24,
-            imageId = "p30wgwqiU",
-            description = "The seventh studio album by the German electronic band. Includes the singles 'Neon Lights', 'The Robots' and 'The Model'"
-        )
-        productInteractor.add("Cunning Stunts by Cows", 33, imageId = "bYHIZeeTJ", description = "")
-        productInteractor.add("Entertainment", 15, imageId = "U79grxOUn", description = "")
-        productInteractor.add("Bookends", 14, imageId = "s8Qu0k2nI", description = "")
-        productInteractor.add("Bleach", 24, imageId = "Zil1YENhm", description = "")
-        productInteractor.add("Physical Graffiti", 27, imageId = "2brObXy9k", description = "")
-        productInteractor.add("13 Songs", 14, imageId = "HR9jN5Qxd", description = "")
-        productInteractor.add("Computer World", 14, imageId = "wWZDwRbXt", description = "")
-        productInteractor.add("Californication", 14, imageId = "cpyVcoBiB", description = "")
-    }
-
-
-    /* fun populateFromSpotify() {
-         try {
-             authorizationCodeUri_Sync()
-         } catch (e: Exception) {
-             print(e)
-             print(e.stackTrace)
-         }
-     }*/
-
-
-    /*suspend fun authorizationCodeUri_Async() {
-        try {
-            val uriFuture = authorizationCodeUriRequest.executeAsync()
-
-            val uri = uriFuture.join()
-            println("URI: $uri")
-        } catch (e: CompletionException) {
-            println("Error: " + e.cause!!.message)
-        } catch (e: CancellationException) {
-            println("Async operation cancelled.")
-        }
-    }*/
-
-    //////
-
-//    private
-
-    /* fun authorizationCode_Sync() {
-
-         try {
-             val authorizationCodeCredentials = authorizationCodeRequest.execute()
-
-             // Set access and refresh token for further "spotifyApi" object usage
-             spotifyApi.accessToken = authorizationCodeCredentials.accessToken
-             spotifyApi.refreshToken = authorizationCodeCredentials.refreshToken
-             println("Expires in: " + authorizationCodeCredentials.expiresIn)
-         } catch (e: IOException) {
-             println("Error: " + e.message)
-         } catch (e: SpotifyWebApiException) {
-             println("Error: " + e.message)
-         } catch (e: ParseException) {
-             println("Error: " + e.message)
-         }
-     }*/
-
-    /*
-
-       */
-
-    /*suspend fun checkUsersSavedAlbums_Sync() {
-        try {
-            val booleans = checkUsersSavedAlbumsRequest.execute()
-            println("Length: " + booleans.size)
-        } catch (e: IOException) {
-            println("Error: " + e.message)
-        } catch (e: SpotifyWebApiException) {
-            println("Error: " + e.message)
-        } catch (e: ParseException) {
-            println("Error: " + e.message)
-        }
-    }*/
-
-
-    /* @JvmStatic
-     fun main(args: Array<String>) {
-         authorizationCode_Sync()
-         authorizationCode_Async()
-     }*/
-}
+//class ExtractionInteractor(private val productInteractor: ProductInteractor) {
+//
+//
+//    fun populateDB() {
+//        Jedis().flushAll()
+//
+//        productInteractor.add(
+//            "Tweez",
+//            12,
+//            imageId = "BRwqzx3GY",
+//            description = "Includes FREE MP3 version of this album. "
+//        )
+//        productInteractor.add(
+//            "London Calling",
+//            17,
+//            imageId = "qd9oT7EGe",
+//            description = "Best Sellers Rank: 341 in CDs & Vinyl (See Top 100 in CDs & Vinyl)"
+//        )
+//        productInteractor.add(
+//            "The Man Machine",
+//            24,
+//            imageId = "p30wgwqiU",
+//            description = "The seventh studio album by the German electronic band. Includes the singles 'Neon Lights', 'The Robots' and 'The Model'"
+//        )
+//        productInteractor.add("Cunning Stunts by Cows", 33, imageId = "bYHIZeeTJ", description = "")
+//        productInteractor.add("Entertainment", 15, imageId = "U79grxOUn", description = "")
+//        productInteractor.add("Bookends", 14, imageId = "s8Qu0k2nI", description = "")
+//        productInteractor.add("Bleach", 24, imageId = "Zil1YENhm", description = "")
+//        productInteractor.add("Physical Graffiti", 27, imageId = "2brObXy9k", description = "")
+//        productInteractor.add("13 Songs", 14, imageId = "HR9jN5Qxd", description = "")
+//        productInteractor.add("Computer World", 14, imageId = "wWZDwRbXt", description = "")
+//        productInteractor.add("Californication", 14, imageId = "cpyVcoBiB", description = "")
+//    }
+//
+//
+//    /* fun populateFromSpotify() {
+//         try {
+//             authorizationCodeUri_Sync()
+//         } catch (e: Exception) {
+//             print(e)
+//             print(e.stackTrace)
+//         }
+//     }*/
+//
+//
+//    /*suspend fun authorizationCodeUri_Async() {
+//        try {
+//            val uriFuture = authorizationCodeUriRequest.executeAsync()
+//
+//            val uri = uriFuture.join()
+//            println("URI: $uri")
+//        } catch (e: CompletionException) {
+//            println("Error: " + e.cause!!.message)
+//        } catch (e: CancellationException) {
+//            println("Async operation cancelled.")
+//        }
+//    }*/
+//
+//    //////
+//
+////    private
+//
+//    /* fun authorizationCode_Sync() {
+//
+//         try {
+//             val authorizationCodeCredentials = authorizationCodeRequest.execute()
+//
+//             // Set access and refresh token for further "spotifyApi" object usage
+//             spotifyApi.accessToken = authorizationCodeCredentials.accessToken
+//             spotifyApi.refreshToken = authorizationCodeCredentials.refreshToken
+//             println("Expires in: " + authorizationCodeCredentials.expiresIn)
+//         } catch (e: IOException) {
+//             println("Error: " + e.message)
+//         } catch (e: SpotifyWebApiException) {
+//             println("Error: " + e.message)
+//         } catch (e: ParseException) {
+//             println("Error: " + e.message)
+//         }
+//     }*/
+//
+//    /*
+//
+//       */
+//
+//    /*suspend fun checkUsersSavedAlbums_Sync() {
+//        try {
+//            val booleans = checkUsersSavedAlbumsRequest.execute()
+//            println("Length: " + booleans.size)
+//        } catch (e: IOException) {
+//            println("Error: " + e.message)
+//        } catch (e: SpotifyWebApiException) {
+//            println("Error: " + e.message)
+//        } catch (e: ParseException) {
+//            println("Error: " + e.message)
+//        }
+//    }*/
+//
+//
+//    /* @JvmStatic
+//     fun main(args: Array<String>) {
+//         authorizationCode_Sync()
+//         authorizationCode_Async()
+//     }*/
+//}

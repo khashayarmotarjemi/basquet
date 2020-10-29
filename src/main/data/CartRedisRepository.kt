@@ -1,12 +1,7 @@
 package io.khashayar.data
 
-import com.beust.klaxon.Klaxon
 import com.beust.klaxon.KlaxonException
-import io.khashayar.domain.product.Price
-import io.khashayar.domain.product.Product
-import io.khashayar.domain.cart.CartItem
 import redis.clients.jedis.Jedis
-import redis.clients.jedis.exceptions.JedisException
 
 // TODO: move json parsing and conversion to the interactor
 

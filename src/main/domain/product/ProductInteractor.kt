@@ -9,10 +9,18 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
     private val klx: Klaxon = Klaxon()
 
 
-    fun add(name: String, price: Int, description: String, imageId: String = "") {
+    fun add(name: String, artist: String = "", year: String = "", price: Int, description: String = "", imageId: String = "") {
         val itemCount = productsRepository.itemCount()
         val id = itemCount + 1
-        val product = Product(id, name, Price(price, "$"), description = description, imageId = imageId)
+        val product = AlbumProduct(
+            id,
+            name,
+            Price(price, "$"),
+            description = description,
+            imageUrl = imageId,
+            artistName = artist,
+            releaseDate = year
+        )
         productsRepository.add(klx.toJsonString(product))
     }
 
@@ -29,11 +37,11 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
         }
     }
 
-    fun getById(productId: Long): Product? {
+    fun getById(productId: Long): AlbumProduct? {
         val productJson = productsRepository.getById(productId)
         if (productJson != "") {
             try {
-                val product = klx.parse<Product>(productJson)
+                val product = klx.parse<AlbumProduct>(productJson)
                 if (product != null) {
                     return product
                 }
@@ -45,7 +53,7 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
         return null
     }
 
-    fun getAll(): List<Product> {
+    fun getAll(): List<AlbumProduct> {
         return try {
             klx.parseArray(getAllJson()) ?: ArrayList()
         } catch (ke: KlaxonException) {

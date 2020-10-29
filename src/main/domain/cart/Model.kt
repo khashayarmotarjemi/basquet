@@ -1,8 +1,8 @@
 package io.khashayar.domain.cart
 
-import io.khashayar.domain.product.Product
+import io.khashayar.domain.product.AlbumProduct
 
-data class CartItem(val product: Product, var quantity: Int) {
+data class CartItem(val product: AlbumProduct, var quantity: Int) {
     fun incrementQuantity() {
         quantity++
     }

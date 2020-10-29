@@ -4,7 +4,7 @@ import com.beust.klaxon.Klaxon
 import io.khashayar.data.CartRepository
 import io.khashayar.data.ProductRepository
 import io.khashayar.domain.product.Price
-import io.khashayar.domain.product.Product
+import io.khashayar.domain.product.AlbumProduct
 import io.khashayar.data.ProductsRedisRepository
 import io.khashayar.domain.cart.CartItem
 import io.khashayar.domain.product.ProductInteractor
@@ -26,10 +26,10 @@ class Helper {
 
     val userIdWithCart = 999
 
-    val p1 = Product(1, "first product #1", Price(100, "$"))
-    val p2 = Product(2, "second product #2", Price(200, "$"))
-    val p3 = Product(3, "third product #3", Price(300, "$"))
-    val np4 = Product(4, "third product #4", Price(400, "$"))
+    val p1 = AlbumProduct(1, "first product #1", Price(100, "$"))
+    val p2 = AlbumProduct(2, "second product #2", Price(200, "$"))
+    val p3 = AlbumProduct(3, "third product #3", Price(300, "$"))
+    val np4 = AlbumProduct(4, "third product #4", Price(400, "$"))
 
     val c1 = CartItem(p1, 1)
     val c2 = CartItem(p2, 1)
@@ -47,11 +47,11 @@ class Helper {
     val nc4json = klx.toJsonString(nc4)
 
     // these lists have all the products in them
-    val testProducts = ArrayList<Product>()
+    val testProducts = ArrayList<AlbumProduct>()
     val testCartItems = ArrayList<CartItem>()
 
     // these list get interactively populated through the tests
-    private val productDB = ArrayList<Product>()
+    private val productDB = ArrayList<AlbumProduct>()
     private val cartItemDB = ArrayList<CartItem>()
 
     init {
@@ -256,8 +256,8 @@ class ProductRepositoryTests {
         )
     }
 
-    private fun getItemsFromJson(json: String): ArrayList<Product> {
-        val list: List<Product> = Klaxon().parseArray(json)!!
+    private fun getItemsFromJson(json: String): ArrayList<AlbumProduct> {
+        val list: List<AlbumProduct> = Klaxon().parseArray(json)!!
         return ArrayList(list)
     }
 
@@ -265,7 +265,7 @@ class ProductRepositoryTests {
     @ParameterizedTest
     @MethodSource("mocks")
     fun addsItemsCorrectly(mocks: ProductRepoMocks) {
-        val loaded: ArrayList<Product> = getItemsFromJson(mocks.getPopulatedRepo().getAll())
+        val loaded: ArrayList<AlbumProduct> = getItemsFromJson(mocks.getPopulatedRepo().getAll())
 
         assertEquals(loaded.count(), 3)
 
@@ -280,10 +280,10 @@ class ProductRepositoryTests {
 
         val repo = mocks.getPopulatedRepo()
 
-        val product2 = klx.parse<Product>(repo.getById(helper.p2.id))
+        val product2 = klx.parse<AlbumProduct>(repo.getById(helper.p2.id))
         assertEquals(product2!!.id, helper.p2.id)
 
-        val product3 = klx.parse<Product>(repo.getById(helper.p3.id))
+        val product3 = klx.parse<AlbumProduct>(repo.getById(helper.p3.id))
         assertEquals(product3!!.id, helper.p3.id)
     }
 
@@ -317,7 +317,7 @@ class ProductInteractorTests {
     fun addsItemsCorrectly() {
         val productInter = mocks.getInteractor()
 
-        helper.testProducts.map { item -> productInter.add(item.name, item.price.amount, "") }
+        helper.testProducts.map { item -> productInter.add(item.name, price = item.price.amount) }
 
         assertEquals(productInter.getAll().count(), helper.testProducts.count())
     }
@@ -327,7 +327,7 @@ class ProductInteractorTests {
         val productInter = mocks.getInteractor()
 
 
-        helper.testProducts.map { item -> productInter.add(item.name, item.price.amount, "") }
+        helper.testProducts.map { item -> productInter.add(item.name, price = item.price.amount) }
 
         assertEquals(helper.testProducts.size, productInter.getAll().size)
         assertEquals(helper.testProducts[1], productInter.getAll()[1])
@@ -338,7 +338,7 @@ class ProductInteractorTests {
         val productInter = mocks.getInteractor()
 
 
-        helper.testProducts.map { item -> productInter.add(item.name, item.price.amount, "") }
+        helper.testProducts.map { item -> productInter.add(item.name, price = item.price.amount) }
 
         assertEquals(helper.p2, productInter.getById(helper.p2.id))
     }

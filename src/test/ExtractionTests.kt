@@ -19,7 +19,7 @@ class ExtractionTests {
 
     )))
 
-    @Test
+  /*  @Test
     fun run() {
         runBlocking {
             ext.initiate()
@@ -33,7 +33,7 @@ class ExtractionTests {
                 }
             }
         }
-    }
+    }*/
 
 
 

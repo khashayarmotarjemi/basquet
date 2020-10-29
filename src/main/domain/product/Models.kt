@@ -1,15 +1,17 @@
 package io.khashayar.domain.product
 
-class Product(
+class AlbumProduct(
     val id: Long,
     val name: String,
     val price: Price,
-    val imageId: String = "",
+    val releaseDate: String = "",
+    val artistName: String = "",
+    val imageUrl: String = "",
     val description: String = ""
 ) {
 
     override fun equals(other: Any?): Boolean {
-        return other is Product && this.hashCode() == other.hashCode()
+        return other is AlbumProduct && this.hashCode() == other.hashCode()
     }
 
     override fun hashCode(): Int {
@@ -19,7 +21,7 @@ class Product(
     }
 }
 
-class Price(val amount: Int, val currency: String) {
+class Price(val amount: Int, val currency: String = "$") {
     fun plus(price: Price): Price {
         return Price(amount + price.amount, "$")
     }
