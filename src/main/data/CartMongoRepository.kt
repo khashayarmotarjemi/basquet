@@ -3,6 +3,7 @@ package io.khashayar.data
 import com.mongodb.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.ReplaceOptions
 import org.bson.*
 
 
@@ -26,12 +27,14 @@ class CartMongoRepository : CartRepository {
 
 
     override fun getItem(userId: Int, productId: Long): String? {
-        val item = getCollection(userId).find().find {
-            it["product_id"] == productId
+        val item = getCollection(userId).find(Filters.eq("product_id", productId))
+        return if (item.count() > 0) {
+            item.first()["cart_item"].toString()
+        } else {
+            null
         }
-
-        return item?.get("cart_item").toString()
     }
+
 
     override fun getAll(userId: Int): String? {
         val items = getCollection(userId).find().map { it["cart_item"].toString() }
@@ -42,7 +45,10 @@ class CartMongoRepository : CartRepository {
     }
 
     override fun addOrUpdate(userId: Int, productId: Long, cartItemJson: String): Boolean {
-        getCollection(userId).insertOne(getDocument(cartItemJson, productId))
+        getCollection(userId).replaceOne(
+            Filters.eq("product_id", productId), getDocument(cartItemJson, productId),
+            ReplaceOptions().upsert(true)
+        )
         return true
     }
 

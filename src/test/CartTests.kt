@@ -73,6 +73,32 @@ class CartRepositoryTests {
         assert(!loaded.contains(helper.nc4))
     }
 
+    // tests
+    @ParameterizedTest
+    @MethodSource("mocks")
+    fun updatesItemCorrectly(mocks: CartRepoMocks) {
+
+        val repo = mocks.getPopulatedRepo()
+
+        val loaded: ArrayList<CartItem> =
+            getItemsFromJson(repo.getAll(helper.userIdWithCart) ?: "")
+
+        assertEquals(loaded.count(), 3)
+
+        mocks.getPopulatedRepo().addOrUpdate(helper.userIdWithCart, helper.c1.product.id, helper.c1json)
+        mocks.getPopulatedRepo().addOrUpdate(helper.userIdWithCart, helper.c2.product.id, helper.c2json)
+
+        val loaded2: ArrayList<CartItem> =
+            getItemsFromJson(repo.getAll(helper.userIdWithCart) ?: "")
+
+        assertEquals(loaded2.count(), 3)
+
+        assert(loaded.contains(helper.c1))
+        assert(loaded.contains(helper.c2))
+        assert(loaded.contains(helper.c3))
+        assert(!loaded.contains(helper.nc4))
+    }
+
     @ParameterizedTest
     @MethodSource("mocks")
     fun getsCartItemById(mocks: CartRepoMocks) {
@@ -109,7 +135,6 @@ class CartRepositoryTests {
         cartRepository.deleteCart(helper.userIdWithCart)
         assertEquals(null, cartRepository.getAll(helper.userIdWithCart))
     }
-
 }
 
 
