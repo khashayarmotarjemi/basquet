@@ -1,19 +1,17 @@
 package io.khashayar.test
 
 import com.beust.klaxon.Klaxon
+import io.khashayar.data.CartMongoRepository
 import io.khashayar.data.CartRedisRepository
 import io.khashayar.data.CartRepository
 import io.khashayar.domain.cart.CartInteractor
 import io.khashayar.domain.cart.CartItem
-import io.khashayar.domain.product.Price
-import io.khashayar.domain.product.ProductInteractor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import redis.clients.jedis.Jedis
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
@@ -22,12 +20,12 @@ class CartRepoMocks(private val cartRepository: CartRepository) {
     private val helper = Helper()
 
     fun getEmptyRepo(): CartRepository {
-        Jedis().flushAll()
+        cartRepository.testClearAll()
         return cartRepository
     }
 
     fun getPopulatedRepo(): CartRepository {
-        Jedis().flushAll()
+        cartRepository.testClearAll()
         cartRepository.addOrUpdate(helper.userIdWithCart, helper.p1.id, helper.c1json)
         cartRepository.addOrUpdate(helper.userIdWithCart, helper.p2.id, helper.c2json)
         cartRepository.addOrUpdate(helper.userIdWithCart, helper.p3.id, helper.c3json)
@@ -38,7 +36,6 @@ class CartRepoMocks(private val cartRepository: CartRepository) {
 }
 
 
-
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class CartRepositoryTests {
     // init stuff
@@ -46,11 +43,13 @@ class CartRepositoryTests {
     private val helper = Helper()
 
     companion object {
-        private val mocks = CartRepoMocks(CartRedisRepository())
+        private val redisRepo = CartRepoMocks(CartRedisRepository())
+        private val mongoRepo = CartRepoMocks(CartMongoRepository())
 
         @JvmStatic
         fun mocks() = listOf(
-            Arguments.of(mocks),
+            Arguments.of(redisRepo),
+            Arguments.of(mongoRepo),
         )
     }
 
@@ -104,7 +103,6 @@ class CartRepositoryTests {
     @ParameterizedTest
     @MethodSource("mocks")
     fun deletesAllCorrectly(mocks: CartRepoMocks) {
-//        Jedis().flushAll()
         val cartRepository = mocks.getPopulatedRepo()
 
         assertNotNull(cartRepository.getAll(helper.userIdWithCart))
@@ -185,7 +183,7 @@ class CartInteractorTests {
 
         cartInteractor.decrementQuantity(helper.p1.id)
 
-        assertEquals(2,cartInteractor.items().size)
+        assertEquals(2, cartInteractor.items().size)
 
     }
 

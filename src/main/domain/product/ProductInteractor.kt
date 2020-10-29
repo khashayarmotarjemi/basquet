@@ -9,7 +9,7 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
     private val klx: Klaxon = Klaxon()
 
 
-    fun add(name: String, artist: String = "", year: String = "", price: Int, description: String = "", imageId: String = "") {
+    fun add(name: String, artist: String = "", year: String = "", price: Int, description: String = "", imageUrl: String = "") {
         val itemCount = productsRepository.itemCount()
         val id = itemCount + 1
         val product = AlbumProduct(
@@ -17,7 +17,7 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
             name,
             Price(price, "$"),
             description = description,
-            imageUrl = imageId,
+            imageUrl = imageUrl,
             artistName = artist,
             releaseDate = year
         )

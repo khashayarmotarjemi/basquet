@@ -17,4 +17,5 @@ interface CartRepository {
 
     fun hasItem(userId: Int, productId: Long): Boolean
 
+    fun testClearAll()
 }

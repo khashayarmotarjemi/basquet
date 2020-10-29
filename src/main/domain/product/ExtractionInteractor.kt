@@ -6,8 +6,6 @@ import com.wrapper.spotify.model_objects.specification.Album
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import redis.clients.jedis.Jedis
 import java.net.URI
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletionException
@@ -90,7 +88,7 @@ class SpotifyBloc(private val productInteractor: ProductInteractor) {
                                 album.releaseDate,
                                 20,
                                 album.genres.joinToString { it },
-                                imageId = album.images[0].url
+                                imageUrl = album.images[0].url
                             )
                         }
                         sendToOutput(GotAlbums())

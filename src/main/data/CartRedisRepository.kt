@@ -97,73 +97,7 @@ class CartRedisRepository : CartRepository {
         }
     }
 
-
-    /*fun getCartJson(userId: Int): String? {
-        return if (hasCart(userId)) {
-            val cartData = jedis.hget("cart", userId.toString())
-            cartData
-        } else {
-            null
-        }
+    override fun testClearAll() {
+        jedis.flushAll()
     }
-
-    fun add(userId: Int, productId: Long, productJson: String) {
-        try {
-            if (hasCart(userId)) {
-                val oldItems = getCartItems(userId)
-
-                if (hasItem(userId, productId)) {
-                    updateData(incrementItem(oldItems, productId), userId)
-                } else {
-                    oldItems.add(CartItem(product, 1))
-                    updateData(oldItems, userId)
-                }
-            } else {
-                updateData(arrayListOf(CartItem(product, 1)), userId)
-            }
-        } catch (je: JedisException) {
-            print(je)
-            print(je.stackTrace)
-        }
-    }
-
-    fun deleteCart(userId: Int) {
-        jedis.hdel("cart", userId.toString())
-    }
-
-    fun removeItem(userId: Int, productId: Long) {
-        val items = getCartItems(userId)
-        if (hasItem(items, productId)) {
-            items.removeIf { item -> item.product.id == productId }
-            updateData(items, userId)
-        } else {
-            print("Item to delete with id $productId doesn't exist")
-        }
-    }
-
-    fun decrementOne(userId: Int, productId: Long) {
-        val items = getCartItems(userId)
-        if (hasItem(items, productId)) {
-            if (items.find { item -> item.product.id == productId }?.quantity == 1) {
-                items.removeIf { item -> item.product.id == productId }
-                updateData(items, userId)
-            } else {
-                val newItems: List<CartItem> = items.map { cartItem ->
-                    if (cartItem.product.id == productId) {
-                        cartItem.decrementQuantity()
-                    }
-                    cartItem
-                }
-                updateData(newItems, userId)
-            }
-        } else {
-            print("Item to delete with id $productId doesn't exist")
-        }
-    }
-
-    fun total(userId: Int): Price {
-        return getCartItems(userId).fold(
-            initial = Price(0, "$"),
-            operation = { prev, item -> prev.plus(item.product.price.amount * item.quantity) })
-    }*/
 }
