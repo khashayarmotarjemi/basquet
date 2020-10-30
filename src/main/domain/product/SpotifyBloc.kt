@@ -79,7 +79,7 @@ class SpotifyBloc(private val productInteractor: ProductInteractor) {
 
 
                 is GetAlbums -> {
-                    val albums = checkUsersSavedAlbumsAsync()
+                    val albums = getUsersSavedAlbumsAsync()
                     if (albums.isNotEmpty()) {
                         albums.map { album ->
                             productInteractor.add(
@@ -149,12 +149,13 @@ class SpotifyBloc(private val productInteractor: ProductInteractor) {
     }
 
 
-    private fun checkUsersSavedAlbumsAsync(): ArrayList<Album> {
-        val checkUsersSavedAlbumsRequest = spotifyApi.currentUsersSavedAlbums
+    private fun getUsersSavedAlbumsAsync(): ArrayList<Album> {
+        val checkUsersSavedAlbumsRequest = spotifyApi.currentUsersSavedAlbums.limit(40)
             .build()
         try {
             val resultsFuture = checkUsersSavedAlbumsRequest.executeAsync()
             val results = resultsFuture.join()
+
 
             return ArrayList(results.items.map { item -> item.album })
             /*  val album = item.album

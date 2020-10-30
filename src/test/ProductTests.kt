@@ -71,6 +71,7 @@ class Helper {
     }
 
     private fun initiateProductsRepoMock() {
+
         every { mockProductRepo.itemCount() } answers {
             when {
                 productDB.count() == 0 -> 0
@@ -94,7 +95,7 @@ class Helper {
 
             every { mockProductRepo.getById(product.id) } returns productJson
 
-            every { mockProductRepo.add(productJson, product.id) } answers {
+            every { mockProductRepo.add(productJson, product.id,"${product.name} ${product.artistName}") } answers {
                 productDB.add(product)
                 product.id
             }

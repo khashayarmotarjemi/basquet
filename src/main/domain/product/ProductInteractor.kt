@@ -9,7 +9,14 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
     private val klx: Klaxon = Klaxon()
 
 
-    fun add(name: String, artist: String = "", year: String = "", price: Int, description: String = "", imageUrl: String = "") {
+    fun add(
+        name: String,
+        artist: String = "",
+        year: String = "",
+        price: Int,
+        description: String = "",
+        imageUrl: String = ""
+    ) {
         val itemCount = productsRepository.itemCount()
         val id = itemCount + 1
         val product = AlbumProduct(
@@ -21,7 +28,7 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
             artistName = artist,
             releaseDate = year
         )
-        productsRepository.add(klx.toJsonString(product),product.id)
+        productsRepository.add(klx.toJsonString(product), product.id, "$name $artist")
     }
 
     fun getAllJson(): String {
@@ -65,6 +72,14 @@ class ProductInteractor(private val productsRepository: ProductRepository) {
 
     fun deleteAll() {
         productsRepository.deleteAll()
+    }
+
+    fun search(query: String): String {
+        return if (query == "") {
+            "[]"
+        } else {
+            productsRepository.search(query)
+        }
     }
 }
 
